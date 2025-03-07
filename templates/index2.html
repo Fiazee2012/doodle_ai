@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MNIST Number Predictor - AI Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --primary-bg: #0A0A0F;
+      --secondary-bg: #13131A;
+      --accent-color: #6366F1;
+      --accent-hover: #4F46E5;
+      --text-primary: #F8F9FA;
+      --text-secondary: #A0AEC0;
+      --border-color: #2D2D3D;
+      --success-color: #10B981;
+      --error-color: #EF4444;
+      --gradient-start: #6366F1;
+      --gradient-end: #3B82F6;
+    }
+
+    body {
+      background-color: var(--primary-bg);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, var(--secondary-bg), var(--primary-bg));
+      padding: 4rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    }
+
+    .hero-title {
+      font-weight: 700;
+      background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1.5rem;
+    }
+
+    .network-container {
+      position: relative;
+      padding: 2rem;
+      background: rgba(19, 19, 26, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 2rem;
+    }
+
+    .node-group {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .node-group:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+    }
+
+    .node-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .card {
+      background: rgba(19, 19, 26, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    canvas {
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      cursor: crosshair;
+      background-color: var(--secondary-bg);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: border-color 0.3s ease;
+    }
+
+    canvas:hover {
+      border-color: var(--accent-color);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(to right, var(--accent-hover), var(--gradient-start));
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: linear-gradient(to right, var(--error-color), #DC2626);
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(to right, #DC2626, var(--error-color));
+      transform: translateY(-2px);
+    }
+
+    .predictions-panel {
+      background: rgba(19, 19, 26, 0.6);
+      border-radius: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) var(--secondary-bg);
+    }
+
+    .predictions-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .predictions-panel::-webkit-scrollbar-track {
+      background: var(--secondary-bg);
+    }
+
+    .predictions-panel::-webkit-scrollbar-thumb {
+      background-color: var(--accent-color);
+      border-radius: 3px;
+    }
+
+    .list-group-item {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    .list-group-item:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .github-section {
+      background: linear-gradient(135deg, var(--secondary-bg), var(--primary-bg));
+      padding: 3rem 0;
+      margin-top: 3rem;
+    }
+
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .github-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      color: var(--accent-color);
+    }
+
+    .accuracy-meter {
+      height: 6px;
+      background-color: var(--secondary-bg);
+      border-radius: 3px;
+      margin-top: 1rem;
+      overflow: hidden;
+    }
+
+    .accuracy-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+      transition: width 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .prediction-processing {
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="container">
+      <h1 class="hero-title display-4 text-center">Neural Network Digit Recognition</h1>
+      <p class="lead text-center text-secondary mb-5">
+        Experience the power of machine learning with our advanced neural network that predicts hand-drawn digits in real-time.
+        Draw any number from 0 to 9 and watch as our AI model analyzes and predicts your input.
+      </p>
+      
+      <div class="network-container">
+        <div class="row justify-content-center">
+          <div class="col-md-4 mb-4">
+            <div class="node-group">
+              <i class="fas fa-network-wired node-icon"></i>
+              <h5>Input Layer</h5>
+              <p class="mb-0">784 nodes</p>
+              <small class="text-secondary">Image pixels (28x28)</small>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="node-group">
+              <i class="fas fa-brain node-icon"></i>
+              <h5>Hidden Layer</h5>
+              <p class="mb-0">40 nodes</p>
+              <small class="text-secondary">Pattern recognition</small>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="node-group">
+              <i class="fas fa-poll node-icon"></i>
+              <h5>Output Layer</h5>
+              <p class="mb-0">10 nodes</p>
+              <small class="text-secondary">Digit classification</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row">
+      <!-- Drawing Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4">Draw a Number</h3>
+            <canvas id="drawingCanvas" width="280" height="280" class="d-block mx-auto"></canvas>
+            <div class="text-center mt-4">
+              <button id="clearButton" class="btn btn-danger me-3">
+                <i class="fas fa-eraser me-2"></i>Clear
+              </button>
+              <button id="predictionButton" class="btn btn-primary">
+                <i class="fas fa-magic me-2"></i>Predict
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Predictions Section -->
+      <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4" style="color:white;">Prediction Results</h3>
+            <div class="predictions-panel">
+              <ul id="predictionsList" class="list-group list-group-flush">
+                <li class="list-group-item text-center" style="color:white;">
+                  <i class="fas fa-pen me-2"></i>
+                  Draw a number and click "Predict" to see the AI in action
+                </li>
+              </ul>
+              <div id="results"></div>
+            </div>
+            <div class="accuracy-meter mt-4">
+              <div class="accuracy-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Section -->
+  <div class="github-section">
+    <div class="container text-center">
+      <h4 class="mb-4">Explore the Technology</h4>
+      <a href="https://github.com/Amn8189/AI_Learning/blob/master/supervisedLearning/mnist.py" 
+         class="github-link" 
+         target="_blank">
+        <i class="fab fa-github me-3 fa-lg"></i>
+        View Source Code on GitHub
+      </a>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='drawmanager2.js') }}"></script>
+</body>
+</html>

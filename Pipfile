@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+flask = "*"
+reshape = "*"
+pillow = "*"
+matplotlib = "*"
+gunicorn = "*"
+opencv-python-headless = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
